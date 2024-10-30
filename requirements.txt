@@ -1,0 +1,12 @@
+# Core dependencies
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.2.0
+joblib>=1.2.0
+
+# String matching
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.21.0  # For improved performance
+
+# Type hints support
+typing-extensions>=4.5.0
