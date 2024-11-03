@@ -80,19 +80,6 @@ class TemplateMapper:
             best_match = max(combined_scores.items(), key=lambda x: x[1])
             if best_match[1] >= threshold:
                 mappings[input_col] = best_match[0]
-            # else:
-            #     # Fallback mapping based on common patterns
-            #     lower_input = input_col.lower()
-            #     if 'client' in lower_input or 'customer' in lower_input or 'name' in lower_input:
-            #         mappings[input_col] = 'customer_name'
-            #     elif 'date' in lower_input or 'dt' in lower_input:
-            #         mappings[input_col] = 'order_date'
-            #     elif 'prod' in lower_input:
-            #         mappings[input_col] = 'product_id'
-            #     elif 'qty' in lower_input or 'quantity' in lower_input or 'amount' in lower_input:
-            #         mappings[input_col] = 'quantity'
-            #     elif 'price' in lower_input:
-            #         mappings[input_col] = 'unit_price'
             
         return mappings
     
