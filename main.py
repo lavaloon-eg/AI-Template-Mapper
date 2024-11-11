@@ -1,6 +1,6 @@
 import requests
 import json
-
+from typing import List, Dict
 # API base URL
 BASE_URL = "http://localhost:8000"
 
@@ -55,6 +55,37 @@ def map_template():
     )
     print("Mapping result:", json.dumps(response.json(), indent=2))
 
+def train_existing_model():
+    new_training_examples = [
+        {
+            "Account Rim": "CUSTOMER_NUMBER",
+            "Account Number": "ACC_NO",
+            "Case ID": "Case",
+            "Customer Full Name": "Customer_Name",
+            "Current Bucket": "BKT_IS",
+            "Previous Bucket": "BKT_Was"
+        },
+        {
+            "رقم الزبون": "CUSTOMER_NUMBER",
+            "رقم الحساب": "ACC_NO",
+            "الحالة": "Case",
+            "اسم الزبون": "Customer_Name",
+            "التصنيف الحالي": "BKT_IS",
+            "التصنيف السابق": "BKT_Was"
+        }
+    ]
+    response = requests.post(
+        f"http://localhost:8000/models/collection_mapper/train",
+        json={
+            "examples": new_training_examples
+        }
+    )
+    print(response.json())
+
+
+
 if __name__ == "__main__":
+    
     create_model()
+    train_existing_model()
     map_template()

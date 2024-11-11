@@ -30,6 +30,10 @@ class TrainingRequest(BaseModelConfig):
     model_name: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
+class AdditionalTrainingRequest(BaseModelConfig):
+    examples: List[Dict[str, str]]
+    metadata: Optional[Dict[str, Any]] = None
+
 class MappingRequest(BaseModelConfig):
     columns: List[str]
     data: Optional[List[Dict[str, Any]]] = None
@@ -46,6 +50,13 @@ class MappingResponse(BaseModelConfig):
     mapping: Dict[str, str]
     unmapped_columns: List[str]
     transformed_data: Optional[List[Dict[str, Any]]] = None
+
+class TrainingResponse(BaseModelConfig):
+    model_name: str
+    previous_examples: int
+    new_examples: int
+    total_examples: int
+    last_updated: str
 
 # Initialize persistence (assuming you have the persistence module)
 
@@ -131,6 +142,44 @@ async def get_model_info(model_name: str):
     except Exception as e:
         logger.error(f"Error getting model info: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/models/{model_name}/train", response_model=TrainingResponse)
+async def train_existing_model(model_name: str, request: AdditionalTrainingRequest):
+    """Train an existing model with additional examples"""
+    try:
+        # Load existing model
+        mapper, metadata = persistence.load_model(model_name)
+        
+        # Store previous count of examples
+        previous_examples = metadata.get('training_examples', 0)
+        
+        # Train with new examples
+        mapper.train_on_examples(request.examples)
+        
+        # Update metadata
+        metadata.update({
+            'last_updated': datetime.now().isoformat(),
+            'training_examples': previous_examples + len(request.examples)
+        })
+        if request.metadata:
+            metadata.update(request.metadata)
+        
+        # Save updated model
+        persistence.save_model(model_name, mapper, metadata)
+        
+        return TrainingResponse(
+            model_name=model_name,
+            previous_examples=previous_examples,
+            new_examples=len(request.examples),
+            total_examples=metadata['training_examples'],
+            last_updated=metadata['last_updated']
+        )
+        
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Model '{model_name}' not found")
+    except Exception as e:
+        logger.error(f"Error training model: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.delete("/models/{model_name}")
 async def delete_model(model_name: str):

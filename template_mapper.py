@@ -16,6 +16,9 @@ class TemplateMapper:
         self.standard_template = standard_template
         self.vectorizer = TfidfVectorizer()
         self.column_vectors = None
+        self.training_mappings = {}
+        self.corpus = []
+        
         
     def preprocess_column_name(self, column: str) -> str:
         """Clean and standardize column names"""
@@ -32,18 +35,14 @@ class TemplateMapper:
         Args:
             mapping_examples: List of dictionaries mapping source columns to standard columns
         """
-        # Create corpus of all possible column names and their mapped standard names
-        self.training_mappings = {}  # Store training mappings for reference
-        corpus = []
-        
         for mapping in mapping_examples:
             for source, standard in mapping.items():
                 processed_source = self.preprocess_column_name(source)
-                corpus.append(processed_source)
+                self.corpus.append(processed_source)
                 self.training_mappings[processed_source] = standard
                 
-        # Generate TF-IDF vectors for the corpus
-        self.column_vectors = self.vectorizer.fit_transform(corpus)
+        # Retrain TF-IDF vectorizer with all examples
+        self.column_vectors = self.vectorizer.fit_transform(self.corpus)
     
     def map_template(self, input_template: List[str], threshold: float = 0.3) -> Dict[str, str]:
         """
