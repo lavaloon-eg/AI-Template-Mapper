@@ -1,1 +1,1 @@
-{"model_name": "collection_mapper", "created_at": "2024-11-11T10:32:47.665695", "last_updated": "2024-11-11T10:32:47.682325", "standard_template": ["CUSTOMER_NUMBER", "ACC_NO", "Case", "Customer_Name", "BKT_IS", "BKT_Was"], "training_examples": 12}
+{"model_name": "collection_mapper", "created_at": "2024-12-15T08:46:42.744377", "last_updated": "2024-12-15T08:46:42.761040", "standard_template": ["CUSTOMER_NUMBER", "ACC_NO", "Case", "Customer_Name", "BKT_IS", "BKT_Was"], "training_examples": 12}

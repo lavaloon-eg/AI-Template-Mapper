@@ -56,30 +56,47 @@ class TemplateMapper:
             Dictionary mapping input columns to standard template columns
         """
         mappings = {}
+        mapped_standard_cols = set()  # Keep track of already mapped standard columns
         
+        # First pass: Check for direct matches from training examples
         for input_col in input_template:
             processed_input = self.preprocess_column_name(input_col)
             
             # Direct match from training examples
             if processed_input in self.training_mappings:
-                mappings[input_col] = self.training_mappings[processed_input]
+                standard_col = self.training_mappings[processed_input]
+                if standard_col not in mapped_standard_cols:  # Prevent duplicate mappings
+                    mappings[input_col] = standard_col
+                    mapped_standard_cols.add(standard_col)
                 continue
+        
+        # Second pass: Use similarity scoring for remaining columns
+        for input_col in input_template:
+            if input_col in mappings:  # Skip already mapped columns
+                continue
+                
+            processed_input = self.preprocess_column_name(input_col)
             
             # Calculate similarity scores
             tfidf_similarity = self._get_tfidf_similarity(processed_input)
-            
             fuzzy_scores = self._get_fuzzy_scores(processed_input)
             
             # Combine similarity scores with higher weight for fuzzy matching
             combined_scores = {
                 std_col: (tfidf_similarity[std_col] * 0.3 + fuzzy_scores[std_col] * 0.7)
                 for std_col in self.standard_template
+                if std_col not in mapped_standard_cols  # Only consider unmapped standard columns
             }
+            
+            # Skip if no unmapped standard columns remain
+            if not combined_scores:
+                continue
             
             # Find best match above threshold
             best_match = max(combined_scores.items(), key=lambda x: x[1])
             if best_match[1] >= threshold:
                 mappings[input_col] = best_match[0]
+                mapped_standard_cols.add(best_match[0])
             
         return mappings
     
@@ -191,19 +208,19 @@ def main():
     print("\nTransformed complete data:")
     print(transformed_complete)
     
-    # # Test with partial data
-    # print("\nExample 2: Partial data")
-    # partial_data = pd.DataFrame({
-    #     'ClientName': ['Bob Wilson'],
-    #     'ProdID': ['P789'],
-    #     'Quantity': [2]
-    # })
+    # Test with partial data
+    print("\nExample 2: Partial data")
+    partial_data = pd.DataFrame({
+        'ClientName': ['Bob Wilson'],
+        'ProdID': ['P789'],
+        'Quantity': [2]
+    })
     
-    # mapping = mapper.map_template(partial_data.columns)
-    # print("\nGenerated mapping:", mapping)
-    # transformed_partial = mapper.transform_data(partial_data, mapping)
-    # print("\nTransformed partial data:")
-    # print(transformed_partial)
+    mapping = mapper.map_template(partial_data.columns)
+    print("\nGenerated mapping:", mapping)
+    transformed_partial = mapper.transform_data(partial_data, mapping)
+    print("\nTransformed partial data:")
+    print(transformed_partial)
 
 if __name__ == "__main__":
     main()
